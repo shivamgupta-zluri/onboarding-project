@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import Papa from 'papaparse';
+import currencySymbols from './currencySymbols'; // Ensure this path is correct
 
 const UploadCSVModal = ({ isOpen, onClose, onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -35,7 +36,6 @@ const UploadCSVModal = ({ isOpen, onClose, onUploadSuccess }) => {
           const processedTransactions = transactions.map((transaction, index) => {
             // Adjusting to match the CSV file headers exactly
             const { Date: date, Description: description, Amount: originalAmount, Currency: currency } = transaction;
-           // console.log(transaction);
 
             if (!date || !description || !originalAmount || !currency) {
               errors.push(`Row ${index + 1}: One or more fields are missing.`);
@@ -47,9 +47,25 @@ const UploadCSVModal = ({ isOpen, onClose, onUploadSuccess }) => {
               return null;
             }
 
+            if (!description.trim()) {
+              errors.push(`Row ${index + 1}: Description should not be empty.`);
+              return null;
+            }
+
             const upperCaseCurrency = currency.toUpperCase();
-            if (!rates[upperCaseCurrency]) {
+            if (!currencySymbols[upperCaseCurrency]) {
               errors.push(`Row ${index + 1}: Currency ${upperCaseCurrency} is not supported.`);
+              return null;
+            }
+
+            const amount = parseFloat(originalAmount);
+            if (isNaN(amount) || amount <= 0) {
+              errors.push(`Row ${index + 1}: Amount should be greater than 0.`);
+              return null;
+            }
+
+            if (!rates[upperCaseCurrency]) {
+              errors.push(`Row ${index + 1}: Currency ${upperCaseCurrency} exchange rate not available.`);
               return null;
             }
 
@@ -71,6 +87,8 @@ const UploadCSVModal = ({ isOpen, onClose, onUploadSuccess }) => {
             setIsSubmitting(false);
             return;
           }
+
+
 
           //console.log(validTransactions);
           // Send valid transactions to backend

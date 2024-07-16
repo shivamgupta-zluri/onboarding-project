@@ -149,8 +149,6 @@ async function uploadCSV(req, res) {
     const csvFile = req.body;
 
     const transactions = csvFile.map((row) => {
-      //   const betterDate = new Date(row.transactionDate);
-      //console.log(row.transactionDate, convertDateFormat(row.transactionDate));
       return {
         transactionDate: convertDateFormat(row.transactionDate),
         description: row.description,
@@ -159,7 +157,6 @@ async function uploadCSV(req, res) {
         currency: row.currency,
       };
     });
-    // console.log(req);÷
 
     const validationErrors = transactions.filter(
       (transaction) =>
@@ -175,18 +172,16 @@ async function uploadCSV(req, res) {
         error: "Missing required fields in one or more transactions",
       });
     }
-    console.log(transactions[0]);
-    // Create transactions in database
+  
     for (const transaction of transactions) {
       try {
-        // console.log(transaction);
+        
         Transaction.createTransaction(transaction);
-        // console.log("inserted" , )
       } catch (error) {
-        // console.error("Error creating transaction:", error);
-        // return res
-        //   .status(500)
-        //   .json({ error: "Failed to process transactions" });
+        console.error("Error creating transaction:", error);
+        return res
+          .status(500)
+          .json({ error: "Failed to process transactions" });
       }
     }
 
